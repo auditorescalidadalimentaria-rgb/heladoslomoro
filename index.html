@@ -147,6 +147,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="hbrand"><div class="hlogo">🍦</div><div><div class="htitle">DASHBOARD PRODUCCIÓN</div><div class="hsub">Control de Calidad · Liberación · Trazabilidad</div></div></div>
   <div class="hright">
     <button class="btn-refresh" id="btnR" onclick="loadAll()"><span class="ri">↻</span> Actualizar</button>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);padding:0 4px" id="countdown" title="Próxima actualización automática"></div>
     <div class="hbadge loading" id="hbadge">⏳ Cargando...</div>
   </div>
 </header>
@@ -553,6 +554,45 @@ function renderRec(r,idx){
 
 function tp(id){const b=document.getElementById(id),a=document.getElementById(id+'-a');b.classList.toggle('open');a.classList.toggle('open');}
 
-// ── AUTOLOAD ──
+// ── AUTOLOAD + AUTO-REFRESH ──
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutos en ms
+let refreshTimer = null;
+let lastRefresh = null;
+let countdownInterval = null;
+
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  if (countdownInterval) clearInterval(countdownInterval);
+
+  refreshTimer = setInterval(() => {
+    loadAll();
+  }, REFRESH_INTERVAL);
+
+  // Countdown display en el header
+  let remaining = REFRESH_INTERVAL / 1000;
+  updateCountdown(remaining);
+  countdownInterval = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) remaining = REFRESH_INTERVAL / 1000;
+    updateCountdown(remaining);
+  }, 1000);
+}
+
+function updateCountdown(secs) {
+  const m = Math.floor(secs / 60);
+  const s = String(Math.floor(secs % 60)).padStart(2, '0');
+  const el = document.getElementById('countdown');
+  if (el) el.textContent = `↻ ${m}:${s}`;
+}
+
+// Patch loadAll to restart timer after each load
+const _origLoadAll = loadAll;
+loadAll = async function() {
+  lastRefresh = new Date();
+  await _origLoadAll();
+  startAutoRefresh();
+};
+
+// Initial load
 loadAll();
 </script></body></html>
