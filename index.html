@@ -195,7 +195,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- TAB TRZ PRODUCTO -->
 <div id="tab-trzprod" class="tab-panel">
-  <div class="sync-bar"><span><strong id="trzprod-count">...</strong> registros · <span id="trzprod-ts"></span></span><div style="display:flex;align-items:center;gap:6px"><div class="sdot loading" id="trzprod-dot"></div><span style="color:var(--yellow)" id="trzprod-status">Cargando...</span></div></div>
+  <div class="sync-bar"><span><strong id="trzprod-count">0</strong> registros · <span id="trzprod-ts"></span></span><div style="display:flex;align-items:center;gap:6px"><div class="sdot loading" id="trzprod-dot"></div><span style="color:var(--yellow)" id="trzprod-status">Conectando...</span></div></div>
   <div class="trz-sel">
     <div style="font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:1rem;">🔎 Buscar Trazabilidad de Producto</div>
     <div class="trz-sel-grid">
@@ -597,7 +597,26 @@ async function loadTrzData(){
     console.log('TRZ cargado: '+TRZ_DATA.length+' registros');
   }catch(e){
     console.warn('TRZ no disponible todavía (Apps Script pendiente):', e.message);
-    document.getElementById('trzprod-status').textContent='⚠️ Procesando datos...';
+    // Mostrar estado de error claro en lugar de quedar en "Procesando datos..."
+    const dot = document.getElementById('trzprod-dot');
+    const status = document.getElementById('trzprod-status');
+    const count = document.getElementById('trzprod-count');
+    dot.className = 'sdot';
+    dot.style.background = 'var(--red)';
+    status.textContent = '⚠️ Hoja DASHBOARD_DATA no disponible';
+    status.style.color = 'var(--red)';
+    count.textContent = '0';
+    // Mostrar mensaje informativo en la zona de resultados
+    document.getElementById('trzResults').innerHTML = `
+      <div class="trz-empty">
+        <div style="font-size:36px;margin-bottom:.75rem">⚠️</div>
+        <div style="font-family:'Space Mono',monospace;font-size:13px;color:var(--text);margin-bottom:.5rem">Hoja DASHBOARD_DATA no encontrada</div>
+        <div style="font-size:12px;color:var(--muted);max-width:420px;margin:0 auto;line-height:1.7">
+          Esta pestaña requiere una hoja llamada <strong style="color:var(--accent)">DASHBOARD_DATA</strong> en el Google Sheets, 
+          generada por el Apps Script de trazabilidad.<br><br>
+          <span style="color:var(--yellow)">Error: ${e.message}</span>
+        </div>
+      </div>`;
   }
 }
 
